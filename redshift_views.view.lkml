@@ -121,7 +121,7 @@ view: redshift_data_loads {
       from stl_load_commits
        ;;
   }
-  
+
   dimension: root_bucket {
     type: string
     sql: ${TABLE}.root_bucket ;;
@@ -346,10 +346,10 @@ view: redshift_plan_steps {
 }
 
 view: redshift_queries {
-  # Recent is last 24 hours of queries
+  # Recent is last 24 hours of queries --changed to last 7 days
   # (we only see queries related to our rs user_id)
   derived_table: {
-    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*24)) ;; #22h
+    sql_trigger_value: SELECT FLOOR((EXTRACT(epoch from GETDATE()) - 60*60*22)/(60*60*6)) ;; #22h
     sql: SELECT
         wlm.query,
         q.substring::varchar,
@@ -364,7 +364,7 @@ view: redshift_queries {
       LEFT JOIN STV_WLM_SERVICE_CLASS_CONFIG sc ON sc.service_class=wlm.service_class -- Remove this line if access was not granted
       LEFT JOIN SVL_QLOG q on q.query=wlm.query
       LEFT JOIN STL_QUERY qlong on qlong.query=q.query
-      WHERE wlm.service_class_start_time >= dateadd(day,-1,GETDATE())
+      WHERE wlm.service_class_start_time >= dateadd(day,-7,GETDATE())
       AND wlm.service_class_start_time <= GETDATE()
       --WHERE wlm.query>=(SELECT MAX(query)-5000 FROM STL_WLM_QUERY)
     ;;
@@ -830,12 +830,12 @@ view: redshift_query_execution {
   }
   dimension: step_average_slice_time {
     type: number
-    sql: "Average time among slices, in seconds, for this step" ;;
+    description: "Average time among slices, in seconds, for this step"
     sql: ${TABLE}.avgtime/1000000 ;;
   }
   dimension: step_max_slice_time {
     type: number
-    sql: "Maximum time among slices, in seconds, for this step" ;;
+    description: "Maximum time among slices, in seconds, for this step"
     sql: ${TABLE}.maxtime/1000000 ;;
   }
   dimension: step_skew {
